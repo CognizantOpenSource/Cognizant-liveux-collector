@@ -1,14 +1,14 @@
 //© 2023 Cognizant. All rights reserved. Cognizant Confidential and/or Trade Secret.
 
 import { onBFCache } from './onBFCache';
-import { MAX_CONTENT_LENGTH, BFCACHE } from './constants'
+import { MAX_CONTENT_LENGTH, BFCACHE } from './constants';
 
 export function createApiReporter(url) {
   let isSent = false;
   let values = {};
 
   onBFCache(() => {
-    values = { cache: [{type: BFCACHE }] };
+    values = { cache: [{ type: BFCACHE }] };
     isSent = false;
     onVisibilityChange(sendData, 1);
   });
@@ -17,10 +17,12 @@ export function createApiReporter(url) {
     if (isSent) return;
     isSent = true;
     if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(values)], {type : 'application/json'});
+      const blob = new Blob([JSON.stringify(values)], {
+        type: 'application/json',
+      });
 
       if (blob.size < MAX_CONTENT_LENGTH) {
-          navigator.sendBeacon(url, blob);
+        navigator.sendBeacon(url, blob);
       }
     } else {
       const client = new XMLHttpRequest();
@@ -36,8 +38,8 @@ export function createApiReporter(url) {
     values = {
       ...values,
       ...newMetrics,
-    }
-  }
+    };
+  };
 }
 
 let visiblityChangeCallbacks = [];
@@ -47,13 +49,15 @@ export function onVisibilityChange(callback, order = 0) {
   visiblityChangeCallbacks.push([callback, order]);
   const visibilityChangeCB = () => {
     if (document.visibilityState === 'hidden') {
-      visiblityChangeCallbacks.sort((a, b) => a[1] - b[1]).forEach(([cb]) => cb());
+      visiblityChangeCallbacks
+        .sort((a, b) => a[1] - b[1])
+        .forEach(([cb]) => cb());
       visiblityChangeCallbacks = [];
     }
-  }
+  };
 
   if (!isVisibilitChangeInit) {
     isVisibilitChangeInit = true;
-    document.addEventListener( 'visibilitychange', visibilityChangeCB);
+    document.addEventListener('visibilitychange', visibilityChangeCB);
   }
 }

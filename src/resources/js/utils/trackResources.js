@@ -2,20 +2,20 @@
 
 const MAX_RESOURCES_TRACKED = 30;
 
-export const trackResources = () => {
-    const resources = performance.getEntriesByType
-        ? performance.getEntriesByType('resource')
-            .map(({name: url, initiatorType: type, transferSize: size = 0}) => ({
-                url,
-                type,
-                size
-            }))
-        : [];
+export const trackResources = (navigationEntry) => {
+  const navEntry = navigationEntry || getNavigationEntry() || null;
+  const performanceEntries = performance.getEntriesByType
+    ? performance.getEntriesByType('resource')
+    : [];
 
-    // FIXME RUM-1157 limiting resources tracking to avoid rejection
-    if (resources.length > MAX_RESOURCES_TRACKED) {
-        resources.length = MAX_RESOURCES_TRACKED;
-    }
+  const resources = [navEntry].concat(performanceEntries);
 
-    return resources;
-}
+  return resources
+    .filter(({ transferSize = 0, type = ''}) => transferSize > 0 && type !== BF_NAVIGATION_ENTRY_TYPE)
+    .slice(0, MAX_RESOURCES_TRACKED)
+    .map(({name: url, transferSize: size, initiatorType: type}) => ({
+        size,
+        url,
+        type
+      }));
+};
