@@ -1,5 +1,5 @@
 {
-  "name": "rum-tool-collector",
+  "name": "cognizant-web-performance-collector",
   "version": "1.0.0",
   "scripts": {
     "build": "rollup --config rollup.config.mjs",
