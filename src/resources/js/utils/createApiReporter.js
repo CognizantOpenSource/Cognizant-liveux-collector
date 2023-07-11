@@ -1,15 +1,22 @@
-//© 2023 Cognizant. All rights reserved. Cognizant Confidential and/or Trade Secret.
-
+import { v4 as generateViewId } from 'uuid';
 import { onBFCache } from './onBFCache';
 import { MAX_CONTENT_LENGTH, BFCACHE } from './constants';
 
 export function createApiReporter(url) {
   let isSent = false;
-  let values = {};
+  let values = {
+    viewId: generateViewId(),
+  };
 
   onBFCache(() => {
-    values = { cache: [{ type: BFCACHE }] };
+    values = {
+      cache: [{ type: BFCACHE }],
+      // Regen viewId
+      viewId: generateViewId()
+    };
+
     isSent = false;
+
     onVisibilityChange(sendData, 1);
   });
 
@@ -36,6 +43,7 @@ export function createApiReporter(url) {
 
   return (newMetrics) => {
     values = {
+      ingestionTimestamp: Date.now(),
       ...values,
       ...newMetrics,
     };

@@ -1,8 +1,5 @@
-//© 2023 Cognizant. All rights reserved. Cognizant Confidential and/or Trade Secret.
-
-import { onFCP, onFID, onLCP, onTTFB, onINP } from 'web-vitals';
-import { onCLS } from 'web-vitals/attribution';
-import { getSelector } from '../resources/js/utils/getSelector';
+import { onFCP, onFID, onTTFB } from 'web-vitals';
+import { onCLS, onLCP, onINP } from 'web-vitals/attribution';
 import { isBot } from '../resources/js/utils/isBot';
 import {
   createApiReporter,
@@ -28,6 +25,17 @@ import { trackDarkMode } from '../resources/js/utils/trackDarkMode';
 import { trackResources } from '../resources/js/utils/trackResources';
 
 const trackAdditionalData = (report, navigationEntry) => {
+  const domain = window.location.origin;
+  const url = `${window.location.origin}${window.location.pathname}`;
+
+
+  // report required values
+  report({
+    domain,
+    url,
+    timestamp: Date.now(),
+  });
+
   // cookie
   onVisibilityChange(() => {
     const consentString = document
@@ -62,6 +70,7 @@ const trackAdditionalData = (report, navigationEntry) => {
   // network information
   if ('connection' in navigator) {
     const { saveData, downlink, effectiveType, rtt } = navigator.connection;
+
     report({
       network: {
         downlink,
@@ -114,8 +123,6 @@ const trackAdditionalData = (report, navigationEntry) => {
   }
 
   // url information
-  const domain = window.location.origin;
-  const url = `${window.location.origin}${window.location.pathname}`;
   const urlSearchParameters = new URLSearchParams(window.location.search);
   const urlParams = Array.from(urlSearchParameters.keys());
   const urlHash = window.location.hash.includes(JWT_NAME)
@@ -125,13 +132,6 @@ const trackAdditionalData = (report, navigationEntry) => {
     document.location.host
   );
   const referrerUrl = document.referrer ? new URL(document.referrer) : null;
-
-  // report required values
-  report({
-    domain,
-    url,
-    timestamp: Date.now(),
-  });
 
   // behaviour
   onVisibilityChange(() => {
@@ -210,35 +210,56 @@ const initCollector = (endpoint, chance = 1) => {
     report(CWVEntry);
   };
 
-  onLCP(({ name, value, entries }) => {
-    const element = getSelector(entries[entries.length - 1]?.element);
+  onLCP(({ name, value, attribution }) => {
     report({
       [name.toLocaleLowerCase()]: {
+        element: attribution?.element ?? '',
         value: Math.round(value),
-        element,
       },
     });
   });
 
+  onINP(({name, value, attribution}) => {
+    const hasAttribution = Object.keys((attribution || {})).length;
+
+    report({
+      [name.toLocaleLowerCase()]: {
+        value: Math.round(value),
+        ...(hasAttribution && {
+          event: {
+            loadState: attribution.loadState,
+            target: attribution.eventTarget,
+            type: attribution.eventType,
+            time: Math.round(attribution.eventTime * 10000) / 10000,
+          }
+        }),
+      },
+    });
+  });
+
+
   onCLS(({ name, value, attribution }) => {
-    const hasAttribution = Object.keys(attribution).length;
-    const largestShift = {
-      element: attribution.largestShiftTarget,
-      loadState: attribution.loadState,
-      time: Math.round(attribution.largestShiftTime),
-      value: Math.round(attribution.largestShiftValue * 10000) / 10000,
-    };
+    const hasAttribution = Object.keys((attribution || {})).length;
 
     report({
       [name.toLocaleLowerCase()]: {
         value: Math.round(value * 10000) / 10000,
-        ...(hasAttribution && { largestShift }),
+        ...(hasAttribution && {
+          largestShift: {
+            element: attribution.largestShiftTarget,
+            loadState: attribution.loadState,
+            time: Math.round(attribution.largestShiftTime),
+            value: Math.round(attribution.largestShiftValue * 10000) / 10000,
+          }
+        }),
       },
     });
+
   });
 
   onTTFB(({ name, value, entries }) => {
     const metricValue = Math.round(value);
+
     const navigationTimings = entries[0] && {
       redirectTime: Math.round(entries[0].fetchStart),
       dnsTime: Math.round(
@@ -254,20 +275,18 @@ const initCollector = (endpoint, chance = 1) => {
         Math.max(entries[0].responseEnd - entries[0].responseStart, 0)
       ),
     };
-
     report({
       [name.toLocaleLowerCase()]: {
         value: metricValue,
         ...navigationTimings,
       },
     });
+
   });
 
   onFID(reportHandler);
 
   onFCP(reportHandler);
-
-  onINP(reportHandler);
 
   const navEntry = getNavigationEntry();
 

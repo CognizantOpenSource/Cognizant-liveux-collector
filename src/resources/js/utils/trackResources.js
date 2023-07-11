@@ -1,4 +1,5 @@
-//© 2023 Cognizant. All rights reserved. Cognizant Confidential and/or Trade Secret.
+import { getNavigationEntry } from './getNavigationEntry';
+import { BF_NAVIGATION_ENTRY_TYPE } from './constants';
 
 const MAX_RESOURCES_TRACKED = 30;
 
