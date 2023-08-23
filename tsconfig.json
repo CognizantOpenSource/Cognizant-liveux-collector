@@ -1,0 +1,23 @@
+{
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "__tests__"],
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "es2015",
+    "rootDir": "src",
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "lib": ["dom"],
+    "paths": {
+      "@/*": ["*"]
+    },
+    "outDir": "./build",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    // "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "removeComments": true
+  }
+}
