@@ -1,0 +1,11 @@
+{
+  "Basic": true,
+  "Behaviour": true,
+  "DataLayer": true,
+  "Device": true,
+  "LoadingStrategy": true,
+  "Metrics": true,
+  "Network": true,
+  "Resources": true,
+  "Viewport": true
+}
