@@ -1,5 +1,5 @@
 {
-  "name": "cognizant-web-vitals-collector",
+  "name": "cognizant-web-performance-collector",
   "version": "2.0.0",
   "description": "Cognizant Web Vitals Collector",
   "main": "src/core/index.ts",
